@@ -159,7 +159,7 @@ def getFlux(rho_L, rho_R, vx_L, vx_R, vy_L, vy_R, P_L, P_R, gamma):
 	flux_Momy    is the matrix of y-momentum fluxes
 	flux_Energy  is the matrix of energy fluxes
 	"""
-	
+	# to do remove y
 	# left and right energies
 	en_L = P_L/(gamma-1)+0.5*rho_L * (vx_L**2+vy_L**2)
 	en_R = P_R/(gamma-1)+0.5*rho_R * (vx_R**2+vy_R**2)
