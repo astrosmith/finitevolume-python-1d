@@ -1,0 +1,21 @@
+##################
+### .gitignore ###
+##################
+
+## data, images, and log files ##
+*.hdf5
+*.h5
+*.pdf
+*.png
+*.log
+*.out
+*.err
+*.pyc
+*.ipynb_checkpoints
+*.DS_Store
+*.swp
+*.mp4
+*.fits
+*.zip
+.vscode
+
