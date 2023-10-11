@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from plot_utils import plot_snap
 
 """
 Create Your Own Finite Volume Fluid Simulation (With Python)
@@ -198,7 +199,7 @@ def main():
     Mass, Momemtum, Energy = getConserved(rho, v, P, gamma, vol)
 
     # prep figure
-    fig = plt.figure(figsize=(8,6), dpi=80)
+    # fig = plt.figure(figsize=(8,6), dpi=80)
     outputCount = 1
 
     # if plotRealTime:
@@ -256,17 +257,18 @@ def main():
 
         # plot in real time
         if (plotRealTime and plotThisTurn) or (t >= tEnd):
-            plt.cla()
-            plt.plot(x, rho)
-            plt.xlim(0., 1.)
+            plot_snap(gamma=gamma, t=t, x=x, rho=rho)
+            #plt.cla()
+            #plt.plot(x, rho)
+            #plt.xlim(0., 1.)
             # plt.ylim(0., 2.2)
-            plt.title('t = %0.2f' % t)
-            plt.pause(0.001)
-            outputCount += 1
+            #plt.title('t = %0.2f' % t)
+            #plt.pause(0.001)
+            #outputCount += 1
 
     # Save figure
-    plt.savefig('density.pdf',dpi=240)
-    plt.show()
+    #plt.savefig('density.pdf',dpi=240)
+    #plt.show()
 
     return
 
