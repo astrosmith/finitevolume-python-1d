@@ -7,8 +7,8 @@ import h5py
 import matplotlib.pyplot as plt
 import sod
 
-def plot_snap(gamma=1.4, t=0.2, x=None, rho=None):
-    plotname = 'sod.pdf'
+def plot_snap(gamma=1.4, t=0.2, x=None, rho=None, p=None, u=None, num=None):
+    plotname = 'sod.pdf' if num is None else f'sod_{num:02d}.pdf'
 
     # left_state and right_state set p, rho and u
     # geometry = (left boundary, right boundary, initial position of the shock
@@ -42,8 +42,18 @@ def plot_snap(gamma=1.4, t=0.2, x=None, rho=None):
     ## Plot data ##
     for ax,ya in zip(axs,yas):
         ax.plot(d['x'], ya, lw=0.5)
-    if x is not None: 
-        ax1.scatter(x, rho, marker='.', s=10, edgecolor='none', facecolor=[0.5, 0.5, 0.5])
+    if x is not None:
+        if rho is not None:
+            print('Plotting simulation result too')
+            ax1.scatter(x, rho, marker='.', s=10, edgecolor='none', facecolor=[0.5, 0.5, 0.5])
+        if p is not None:
+            ax2.scatter(x, p, marker='.', s=10, edgecolor='none', facecolor=[0.5, 0.5, 0.5])
+        if u is not None:
+            ax3.scatter(x, u, marker='.', s=10, edgecolor='none', facecolor=[0.5, 0.5, 0.5])
+            if rho is not None:
+                ax4.scatter(x, p/rho/(gamma-1.), marker='.', s=10, edgecolor='none', facecolor=[0.5, 0.5, 0.5])
+    else:
+        print('No simulation result to plot')
 
     ## Plot labels ##
     ax4.set_xlabel(r'$x\;{\rm [cm]}$', fontsize=15)
@@ -78,4 +88,5 @@ def plot_snap(gamma=1.4, t=0.2, x=None, rho=None):
     plt.close(fig)
 ## end plot_snap(base='sod', num=0) ##
 
-plot_snap()
+if __name__ == '__main__':
+    plot_snap()

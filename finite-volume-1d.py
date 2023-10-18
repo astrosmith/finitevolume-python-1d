@@ -171,15 +171,15 @@ def main():
     """ Finite Volume simulation """
 
     # Simulation parameters
+    useSlopeLimiting       = True
+    plotRealTime           = False # switch on for plotting as the simulation goes along
     N                      = 128 # resolution
     boxsize                = 1.
     gamma                  = 1.4 # 5/3 # ideal gas gamma
     courant_fac            = 0.4
     t                      = 0
-    tEnd                   = 0.2
-    tOut                   = 0.01 # draw frequency
-    useSlopeLimiting       = True
-    plotRealTime           = False # switch on for plotting as the simulation goes along
+    tEnd                   = 0.02
+    tOut                   = 0.01 if plotRealTime else tEnd # plot frequency
 
     # Mesh
     dx = boxsize / N
@@ -254,17 +254,20 @@ def main():
 
         # update time
         t += dt
+        print(f't = {t}')
 
         # plot in real time
         if (plotRealTime and plotThisTurn) or (t >= tEnd):
-            plot_snap(gamma=gamma, t=t, x=x, rho=rho)
+            print(x)
+            print(rho)
+            plot_snap(gamma=gamma, t=t, x=x, rho=rho, p=P, u=v, num=outputCount)
             #plt.cla()
             #plt.plot(x, rho)
             #plt.xlim(0., 1.)
             # plt.ylim(0., 2.2)
             #plt.title('t = %0.2f' % t)
             #plt.pause(0.001)
-            #outputCount += 1
+            outputCount += 1
 
     # Save figure
     #plt.savefig('density.pdf',dpi=240)
