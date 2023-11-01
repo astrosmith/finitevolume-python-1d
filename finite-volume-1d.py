@@ -213,17 +213,17 @@ def main():
         P_prime = P - 0.5*dt * (gamma * P * v_dx + v * P_dx)
 
         # extrapolate in space to face centers
-        rho_XL, rho_XR = extrapolate_to_face(rho_prime, rho_dx, dx)
-        v_XL, v_XR = extrapolate_to_face(v_prime, v_dx, dx)
-        P_XL, P_XR = extrapolate_to_face(P_prime, P_dx, dx)
+        rho_L, rho_R = extrapolate_to_face(rho_prime, rho_dx, dx)
+        v_L, v_R = extrapolate_to_face(v_prime, v_dx, dx)
+        P_L, P_R = extrapolate_to_face(P_prime, P_dx, dx)
 
         # compute fluxes (local Lax-Friedrichs/Rusanov)
-        flux_m_X, flux_p_X, flux_E_X = get_flux(rho_XL, rho_XR, v_XL, v_XR, P_XL, P_XR, gamma)
+        flux_m, flux_p, flux_E = get_flux(rho_L, rho_R, v_L, v_R, P_L, P_R, gamma)
 
         # update solution
-        m = apply_fluxes(m, flux_m_X, dx, dt)
-        p = apply_fluxes(p, flux_p_X, dx, dt)
-        E = apply_fluxes(E, flux_E_X, dx, dt)
+        m = apply_fluxes(m, flux_m, dx, dt)
+        p = apply_fluxes(p, flux_p, dx, dt)
+        E = apply_fluxes(E, flux_E, dx, dt)
 
         # update time
         t += dt
