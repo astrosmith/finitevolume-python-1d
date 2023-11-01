@@ -84,17 +84,17 @@ def extrapolate_to_face(f, f_dx, dx):
     return f_L, f_R
 
 
-def apply_fluxes(F, flux_F_X, dx, dt):
+def apply_fluxes(F, flux_F, dx, dt):
     """
     Apply fluxes to conserved variables
     F        array of the conserved variable field
-    flux_F_X array of the x-dir fluxes
+    flux_F   array of the x-dir fluxes
     dx       cell size
     dt       timestep
     """
     # Update solution: note the face grid uses right faces
-    F -= dt * dx * flux_F_X # Flow out to the right
-    F += dt * dx * np.roll(flux_F_X,1) # Flow in from the right
+    F -= dt * dx * flux_F # Flow out to the right
+    F += dt * dx * np.roll(flux_F,1) # Flow in from the right
     return F
 
 
@@ -113,20 +113,19 @@ def get_flux(rho_L, rho_R, v_L, v_R, P_L, P_R, gamma):
     flux_E   array of energy fluxes
     """
     # left and right energies
-    en_L = P_L/(gamma-1)+0.5*rho_L * (v_L**2)
-    en_R = P_R/(gamma-1)+0.5*rho_R * (v_R**2)
+    e_L = P_L/(gamma-1) + 0.5*rho_L*v_L**2
+    e_R = P_R/(gamma-1) + 0.5*rho_R*v_R**2
 
     # compute star (averaged) states
-    rho_star = 0.5*(rho_L + rho_R)
-    momx_star = 0.5*(rho_L * v_L + rho_R * v_R)
-    en_star = 0.5*(en_L + en_R)
-
-    P_star = (gamma-1)*(en_star-0.5*(momx_star**2)/rho_star)
+    rho_star = 0.5 * (rho_L + rho_R)
+    p_star = 0.5 * (rho_L * v_L + rho_R * v_R)
+    e_star = 0.5 * (e_L + e_R)
+    P_star = (gamma-1)*(e_star - 0.5*p_star**2/rho_star)
 
     # compute fluxes (local Lax-Friedrichs/Rusanov)
-    flux_m = momx_star
-    flux_p = momx_star**2/rho_star + P_star
-    flux_E = (en_star+P_star) * momx_star/rho_star
+    flux_m = p_star
+    flux_p = p_star**2/rho_star + P_star # Why is this here?
+    flux_E = (e_star + P_star) * p_star / rho_star
 
     # find wavespeeds
     C_L = np.sqrt(gamma*P_L/rho_L) + np.abs(v_L)
@@ -136,7 +135,7 @@ def get_flux(rho_L, rho_R, v_L, v_R, P_L, P_R, gamma):
     # add stabilizing diffusive term
     flux_m -= C * 0.5 * (rho_L - rho_R)
     flux_p -= C * 0.5 * (rho_L * v_L - rho_R * v_R)
-    flux_E -= C * 0.5 * (en_L - en_R)
+    flux_E -= C * 0.5 * (e_L - e_R)
 
     return flux_m, flux_p, flux_E
 
@@ -153,7 +152,7 @@ def main():
     courant_fac            = 0.4
     t                      = 0
     tEnd                   = 0.02
-    tOut                   = 0.01 if plotRealTime else tEnd # plot frequency
+    t_out                   = 0.01 if plotRealTime else tEnd # plot frequency
 
     # Mesh
     dx = boxsize / N
@@ -174,7 +173,7 @@ def main():
 
     # prep figure
     # fig = plt.figure(figsize=(8,6), dpi=80)
-    outputCount = 1
+    output_count = 1
 
     # if plotRealTime:
     #     plt.cla()
@@ -193,8 +192,8 @@ def main():
         # get time step (CFL) = dx / max signal speed
         dt = courant_fac * np.min(dx / (np.sqrt(gamma*P/rho) + np.sqrt(v**2)))
         plotThisTurn = False
-        if t + dt > outputCount*tOut:
-            dt = outputCount*tOut - t
+        if t + dt > output_count * t_out:
+            dt = output_count * t_out - t
             plotThisTurn = True
 
         # calculate gradients
@@ -234,14 +233,14 @@ def main():
         if (plotRealTime and plotThisTurn) or (t >= tEnd):
             print(x)
             print(rho)
-            plot_snap(gamma=gamma, t=t, x=x, rho=rho, p=P, u=v, num=outputCount)
+            plot_snap(gamma=gamma, t=t, x=x, rho=rho, p=P, u=v, num=output_count)
             #plt.cla()
             #plt.plot(x, rho)
             #plt.xlim(0., 1.)
             # plt.ylim(0., 2.2)
             #plt.title('t = %0.2f' % t)
             #plt.pause(0.001)
-            outputCount += 1
+            output_count += 1
 
     # Save figure
     #plt.savefig('density.pdf',dpi=240)
