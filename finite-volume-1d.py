@@ -190,7 +190,7 @@ def main():
         rho, v, P = get_primitive(m, p, E, gamma, dx)
 
         # get time step (CFL) = dx / max signal speed
-        dt = courant_fac * np.min(dx / (np.sqrt(gamma*P/rho) + np.sqrt(v**2)))
+        dt = courant_fac * np.min(dx / (np.sqrt(gamma*P/rho) + np.abs(v)))
         plotThisTurn = False
         if t + dt > output_count * t_out:
             dt = output_count * t_out - t
