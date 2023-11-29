@@ -133,9 +133,9 @@ def get_flux(rho_L, rho_R, v_L, v_R, P_L, P_R, gamma):
     C = np.maximum(C_L, C_R)
 
     # add stabilizing diffusive term
-    flux_m -= C * 0.5 * (rho_L - rho_R)
-    flux_p -= C * 0.5 * (rho_L * v_L - rho_R * v_R)
-    flux_E -= C * 0.5 * (e_L - e_R)
+    flux_m += C * 0.5 * (rho_R - rho_L)
+    flux_p += C * 0.5 * (rho_R * v_R - rho_L * v_L)
+    flux_E += C * 0.5 * (e_R - e_L)
 
     return flux_m, flux_p, flux_E
 
