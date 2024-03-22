@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import sod
 
 def plot_snap(gamma=1.4, t=0.2, x=None, rho=None, p=None, u=None, num=None):
-    plotname = 'sod.pdf' if num is None else f'sod_{num:02d}.pdf'
+    plotname = 'sod.pdf' if num is None else f'sod_{num}.pdf'
 
     # left_state and right_state set p, rho and u
     # geometry = (left boundary, right boundary, initial position of the shock

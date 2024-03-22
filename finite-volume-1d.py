@@ -54,7 +54,17 @@ def get_gradient(f, dx):
     dx       cell size
     f_dx     return array of derivative of f in the x-direction
     """
-    return (np.roll(f,-1) - np.roll(f,1)) / (2*dx)
+    #f_dx = (np.roll(f,-1) - np.roll(f,1)) / (2*dx)
+    f_dx = np.empty_like(f)
+    f_dx[1:-1] = (f[2:] - f[:-2]) / (2*dx)
+    f_dx[0] = (f[1] - f[0]) / dx
+    f_dx[-1] = (f[-1] - f[-2]) / dx
+
+    #n = len(f)
+    #for i in range(1,n-1):
+        #f_dx[i] = (f[i+1] - f[:i-1]) / (2*dx)
+
+    return f_dx
 
 
 def slope_limit(f, dx, f_dx):
@@ -78,23 +88,39 @@ def extrapolate_to_face(f, f_dx, dx):
     f_L      array of spatial-extrapolated values on `left' face along x-axis
     f_R      array of spatial-extrapolated values on `right' face along x-axis
     """
-    f_L = f - f_dx * dx/2
-    f_R = f + f_dx * dx/2
-    f_L = np.roll(f_L,-1) # Why is this here?
+    f_L = np.empty(len(f)+1)
+    f_R = np.empty(len(f)+1)
+    f_L[1:] = f + f_dx * dx/2
+    f_L[0] = f[0] - f_dx[0] * dx/2 
+    f_R[:-1] = f - f_dx * dx/2 
+    f_R[-1] = f[-1] + f_dx[-1] * dx/2
+
+
+    # f_L = f + f_dx * dx/2
+    # f_R = np.empty_like(f)
+    # f_R[:-1] = f[1:] - f_dx[1:] * dx/2
+    # f_R[-1] = f[-1] + f_dx[-1] * dx/2
+
+    # f_L = f - f_dx * dx/2
+    # f_L = np.roll(f_L,-1) # Why is this here?
+    # f_R = f + f_dx * dx/2
+
     return f_L, f_R
 
 
-def apply_fluxes(F, flux_F, dx, dt):
+def apply_fluxes(F, flux_F, dt):
     """
     Apply fluxes to conserved variables
     F        array of the conserved variable field
     flux_F   array of the x-dir fluxes
-    dx       cell size
     dt       timestep
     """
     # Update solution: note the face grid uses right faces
-    F -= dt * dx * flux_F # Flow out to the right
-    F += dt * dx * np.roll(flux_F,1) # Flow in from the right
+    F[1:] -= dt * flux_F[1:-1] # Flow out to the right
+    F[:-1] += dt * flux_F[1:-1] # Flow in from the right
+
+    # F -= dt * flux_F # Flow out to the right
+    # F += dt * np.roll(flux_F,1) # Flow in from the right
     return F
 
 
@@ -127,15 +153,16 @@ def get_flux(rho_L, rho_R, v_L, v_R, P_L, P_R, gamma):
     flux_p = p_star**2/rho_star + P_star # Why is this here?
     flux_E = (e_star + P_star) * p_star / rho_star
 
+    print(np.min(P_L), np.min())
     # find wavespeeds
     C_L = np.sqrt(gamma*P_L/rho_L) + np.abs(v_L)
     C_R = np.sqrt(gamma*P_R/rho_R) + np.abs(v_R)
     C = np.maximum(C_L, C_R)
 
     # add stabilizing diffusive term
-    flux_m += C * 0.5 * (rho_R - rho_L)
-    flux_p += C * 0.5 * (rho_R * v_R - rho_L * v_L)
-    flux_E += C * 0.5 * (e_R - e_L)
+    flux_m -= C * 0.5 * (rho_L - rho_R)
+    flux_p -= C * 0.5 * (rho_L * v_L - rho_R * v_R)
+    flux_E -= C * 0.5 * (e_L - e_R)
 
     return flux_m, flux_p, flux_E
 
@@ -151,13 +178,13 @@ def main():
     gamma                  = 1.4 # 5/3 # ideal gas gamma
     courant_fac            = 0.4
     t                      = 0
-    tEnd                   = 0.02
-    t_out                   = 0.01 if plotRealTime else tEnd # plot frequency
+    tEnd                   = .2
+    t_out                  = 0.02 if plotRealTime else tEnd # plot frequency
 
     # Mesh
     dx = boxsize / N
     dx = dx
-    # x_edges = np.linspace(0., boxsize, N+1)
+    #x_edges = np.linspace(0., boxsize, N+1)
     x = np.linspace(0.5*dx, boxsize-0.5*dx, N)
 
     # Generate Initial Conditions - different values for left and right states
@@ -220,24 +247,27 @@ def main():
         # compute fluxes (local Lax-Friedrichs/Rusanov)
         flux_m, flux_p, flux_E = get_flux(rho_L, rho_R, v_L, v_R, P_L, P_R, gamma)
 
+        print(np.shape(m), np.shape(flux_m)) 
+
         # update solution
-        m = apply_fluxes(m, flux_m, dx, dt)
-        p = apply_fluxes(p, flux_p, dx, dt)
-        E = apply_fluxes(E, flux_E, dx, dt)
+        m = apply_fluxes(m, flux_m, dt)
+        p = apply_fluxes(p, flux_p, dt)
+        E = apply_fluxes(E, flux_E, dt)
 
         # update time
         t += dt
         print(f't = {t}')
 
         # plot in real time
-        if (plotRealTime and plotThisTurn) or (t >= tEnd):
+        # if (plotRealTime and plotThisTurn) or (t >= tEnd):
+        if False:
             print(x)
             print(rho)
             plot_snap(gamma=gamma, t=t, x=x, rho=rho, p=P, u=v, num=output_count)
             #plt.cla()
             #plt.plot(x, rho)
-            #plt.xlim(0., 1.)
-            # plt.ylim(0., 2.2)
+            #plt.xlim(0.8, 1.)
+            #plt.ylim(0., 2.2)
             #plt.title('t = %0.2f' % t)
             #plt.pause(0.001)
             output_count += 1
